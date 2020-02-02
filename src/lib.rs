@@ -2,14 +2,11 @@
 
 ///! X-Powers AXP173 Power Management IC
 ///! Datasheet: [/doc/AXP173 Datasheet v1.12_cn.zh-CN.en.pdf]
+use embedded_hal::blocking::i2c::{Write, WriteRead};
 
-use embedded_hal::{
-    blocking::i2c::{Write, WriteRead},
-};
-
+use bit_field::BitField;
 use bitflags::bitflags;
 use byteorder::{ByteOrder, LittleEndian};
-use bit_field::BitField;
 
 /// Default values for the on-chip buffer.
 /// Datasheet, p. 28, section 9.11.
@@ -22,7 +19,7 @@ pub enum Error<E> {
     I2c(E),
 
     /// Communication failure or invalid chip used
-    InvalidChip([u8; 6])
+    InvalidChip([u8; 6]),
 }
 
 pub struct Axp173<I> {
@@ -30,15 +27,13 @@ pub struct Axp173<I> {
 }
 
 impl<I, E> Axp173<I>
-    where
-        I: WriteRead<Error = E> + Write<Error = E>,
+where
+    I: WriteRead<Error = E> + Write<Error = E>,
 {
     /// Side-effect-free constructor.
     /// Nothing will be read or written before `init()` call.
     pub fn new(i2c: I) -> Self {
-        let axp = Axp173 {
-            i2c,
-        };
+        let axp = Axp173 { i2c };
 
         axp
     }
@@ -47,21 +42,19 @@ impl<I, E> Axp173<I>
     /// AXP173 doesn't have a dedicated chip ID register and connection is checked by reading
     /// on-chip buffer for a presence of default values.
     pub fn init(&mut self) -> Result<(), Error<E>> {
-        self.read_u8(POWER_DATA_BUFFER1)
-            .map_err(Error::I2c)?;
+        self.read_u8(POWER_DATA_BUFFER1).map_err(Error::I2c)?;
 
         let buf = self.read_onchip_buffer()?;
 
         match buf {
             AXP173_ON_CHIP_BUFFER_DEFAULT => Ok(()),
-            _ => Err(Error::InvalidChip(buf))
+            _ => Err(Error::InvalidChip(buf)),
         }
     }
 
     pub fn read_onchip_buffer(&mut self) -> Result<[u8; 6], Error<E>> {
         let mut buf = [0u8; 6];
-        self
-            .read_bytes(POWER_DATA_BUFFER1, &mut buf)
+        self.read_bytes(POWER_DATA_BUFFER1, &mut buf)
             .map_err(Error::I2c)?;
 
         Ok(buf)
@@ -69,24 +62,21 @@ impl<I, E> Axp173<I>
 
     /// Returns `true` if device is connected to the USB power source.
     pub fn vbus_present(&mut self) -> Result<bool, Error<E>> {
-        let reg_val = self
-            .read_u8(POWER_STATUS).map_err(Error::I2c)?;
+        let reg_val = self.read_u8(POWER_STATUS).map_err(Error::I2c)?;
 
         Ok(reg_val.get_bit(POWER_STATUS_VBUS_PRESENT))
     }
 
     /// Returns `true` if lithium battery is connected.
     pub fn battery_present(&mut self) -> Result<bool, Error<E>> {
-        let reg_val = self
-            .read_u8(POWER_MODE_CHGSTATUS).map_err(Error::I2c)?;
+        let reg_val = self.read_u8(POWER_MODE_CHGSTATUS).map_err(Error::I2c)?;
 
         Ok(reg_val.get_bit(POWER_MODE_CHGSTATUS_BATTERY_PRESENT))
     }
 
     /// Returns `true` if lithium battery is connected and currently charging.
     pub fn battery_charging(&mut self) -> Result<bool, Error<E>> {
-        let reg_val = self
-            .read_u8(POWER_MODE_CHGSTATUS).map_err(Error::I2c)?;
+        let reg_val = self.read_u8(POWER_MODE_CHGSTATUS).map_err(Error::I2c)?;
 
         Ok(reg_val.get_bit(POWER_MODE_CHGSTATUS_IS_CHARGING))
     }
@@ -109,15 +99,11 @@ impl<I, E> Axp173<I>
             Axp173LdoKind::LDO4 => POWER_ON_OFF_REG_LDO4_ON,
         };
 
-        let mut bits = self.
-            read_u8(POWER_ON_OFF_REG)
-            .map_err(Error::I2c)?;
+        let mut bits = self.read_u8(POWER_ON_OFF_REG).map_err(Error::I2c)?;
 
         bits.set_bit(bit, enable);
 
-        self
-            .write_u8(POWER_ON_OFF_REG, bits)
-            .map_err(Error::I2c)?;
+        self.write_u8(POWER_ON_OFF_REG, bits).map_err(Error::I2c)?;
 
         Ok(())
     }
@@ -130,9 +116,7 @@ impl<I, E> Axp173<I>
 
         let voltage = ldo.voltage;
 
-        let mut bits = self
-            .read_u8(reg)
-            .map_err(Error::I2c)?;
+        let mut bits = self.read_u8(reg).map_err(Error::I2c)?;
 
         let bits_range = match &ldo.kind {
             Axp173LdoKind::LDO2 => 4..8,
@@ -142,9 +126,7 @@ impl<I, E> Axp173<I>
 
         bits.set_bits(bits_range, voltage);
 
-        self
-            .write_u8(reg, bits)
-            .map_err(Error::I2c)?;
+        self.write_u8(reg, bits).map_err(Error::I2c)?;
 
         Ok(())
     }
@@ -192,7 +174,7 @@ impl Axp173Ldo {
 
         Self {
             kind: Axp173LdoKind::LDO2,
-            voltage
+            voltage,
         }
     }
 
@@ -206,7 +188,7 @@ impl Axp173Ldo {
 
         Self {
             kind: Axp173LdoKind::LDO3,
-            voltage
+            voltage,
         }
     }
 
@@ -220,7 +202,7 @@ impl Axp173Ldo {
 
         Self {
             kind: Axp173LdoKind::LDO4,
-            voltage
+            voltage,
         }
     }
 }
@@ -363,10 +345,10 @@ pub const POWER_BAT_POWERM8: u8 = 0x71;
 pub const POWER_BAT_POWERL8: u8 = 0x72;
 
 pub const POWER_ON_OFF_REG: u8 = 0x12;
-pub const EXTEN: u8 = 1<<6;
+pub const EXTEN: u8 = 1 << 6;
 
-pub const DC1_ON: u8 = 1<<0;
-pub const DC2_ON: u8 = 1<<4;
+pub const DC1_ON: u8 = 1 << 0;
+pub const DC2_ON: u8 = 1 << 4;
 
 pub const DC2_REG: u8 = 0x23;
 pub const DC1_REG: u8 = 0x26;
@@ -377,35 +359,35 @@ pub const VBUS_IPSOUT_REG: u8 = 0x30;
 pub const VOFF_REG: u8 = 0x31;
 pub const POWER_BATDETECT_CHGLED_REG: u8 = 0x32;
 
-pub const VBUS_VHOLD_EN                           : u8 = 1<<6;
-pub const VBUS_CL_EN                              : u8 = 1<<1;
-pub const BATTERY_DETE                            : u8 = 1<<6;
-pub const BAT_ADC_EN_V                            : u8 = 1<<7;
-pub const BAT_ADC_EN_C                            : u8 = 1<<6;
-pub const AC_ADC_EN_V                             : u8 = 1<<5;
-pub const AC_ADC_EN_C                             : u8 = 1<<4;
-pub const USB_ADC_EN_V                            : u8 = 1<<3;
-pub const USB_ADC_EN_C                            : u8 = 1<<2;
-pub const APS_ADC_EN_V                            : u8 = 1<<1;
-pub const ADC_SPEED_BIT1                          : u8 = 1<<7;
-pub const ADC_SPEED_BIT2                          : u8 = 1<<6;
-pub const INT1_AC_IN                              : u8 = 1<<6;
-pub const INT1_AC_OUT                             : u8 = 1<<5;
-pub const INT1_USB_IN                             : u8 = 1<<3;
-pub const INT1_USB_OUT                            : u8 = 1<<2;
-pub const INT1_VBUS_VHOLD                         : u8 = 1<<1;
-pub const INT2_BATTERY_IN                         : u8 = 1<<7;
-pub const INT2_BATTERY_OUT                        : u8 = 1<<6;
-pub const INT2_BATTERY_CHARGING                   : u8 = 1<<3;
-pub const INT2_BATTERY_CHARGED                    : u8 = 1<<2;
-pub const INT2_BATTERY_HIGH_TEMP: u8 = 1<<1;
-pub const INT2_BATTERY_LOW_TEMP: u8 = 1<<0;
-pub const INT3_SHORTPRESS_PEK: u8 = 1<<1;
-pub const INT3_LONGPRESS_PEK: u8 = 1<<0;
-pub const INT3_LOWVOLTAGE_WARNING: u8 = 1<<4;
-pub const INT4_LOWVOLTAGE_WARNING1: u8 = 1<<1;
-pub const INT4_LOWVOLTAGE_WARNING2: u8 = 1<<0;
-pub const INT5_TIMER                              : u8 = 1<<7;
+pub const VBUS_VHOLD_EN: u8 = 1 << 6;
+pub const VBUS_CL_EN: u8 = 1 << 1;
+pub const BATTERY_DETE: u8 = 1 << 6;
+pub const BAT_ADC_EN_V: u8 = 1 << 7;
+pub const BAT_ADC_EN_C: u8 = 1 << 6;
+pub const AC_ADC_EN_V: u8 = 1 << 5;
+pub const AC_ADC_EN_C: u8 = 1 << 4;
+pub const USB_ADC_EN_V: u8 = 1 << 3;
+pub const USB_ADC_EN_C: u8 = 1 << 2;
+pub const APS_ADC_EN_V: u8 = 1 << 1;
+pub const ADC_SPEED_BIT1: u8 = 1 << 7;
+pub const ADC_SPEED_BIT2: u8 = 1 << 6;
+pub const INT1_AC_IN: u8 = 1 << 6;
+pub const INT1_AC_OUT: u8 = 1 << 5;
+pub const INT1_USB_IN: u8 = 1 << 3;
+pub const INT1_USB_OUT: u8 = 1 << 2;
+pub const INT1_VBUS_VHOLD: u8 = 1 << 1;
+pub const INT2_BATTERY_IN: u8 = 1 << 7;
+pub const INT2_BATTERY_OUT: u8 = 1 << 6;
+pub const INT2_BATTERY_CHARGING: u8 = 1 << 3;
+pub const INT2_BATTERY_CHARGED: u8 = 1 << 2;
+pub const INT2_BATTERY_HIGH_TEMP: u8 = 1 << 1;
+pub const INT2_BATTERY_LOW_TEMP: u8 = 1 << 0;
+pub const INT3_SHORTPRESS_PEK: u8 = 1 << 1;
+pub const INT3_LONGPRESS_PEK: u8 = 1 << 0;
+pub const INT3_LOWVOLTAGE_WARNING: u8 = 1 << 4;
+pub const INT4_LOWVOLTAGE_WARNING1: u8 = 1 << 1;
+pub const INT4_LOWVOLTAGE_WARNING2: u8 = 1 << 0;
+pub const INT5_TIMER: u8 = 1 << 7;
 
 // POWER_STATUS register bits
 pub const POWER_STATUS_START_SOURCE_AC_VBUS: usize = 0;
@@ -417,7 +399,7 @@ pub const POWER_MODE_CHGSTATUS_IS_CHARGING: usize = 6;
 pub const POWER_MODE_CHGSTATUS_BATTERY_PRESENT: usize = 5;
 
 // POWER_ON_OFF_REG register bits
-pub const POWER_ON_OFF_REG_LDO2_ON: usize   = 2;
-pub const POWER_ON_OFF_REG_LDO3_ON: usize   = 3;
-pub const POWER_ON_OFF_REG_LDO4_ON: usize   = 1;
+pub const POWER_ON_OFF_REG_LDO2_ON: usize = 2;
+pub const POWER_ON_OFF_REG_LDO3_ON: usize = 3;
+pub const POWER_ON_OFF_REG_LDO4_ON: usize = 1;
 pub const POWER_ON_OFF_REG_POWER_OFF: usize = 7;
