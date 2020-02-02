@@ -4,8 +4,7 @@
 [![](https://img.shields.io/crates/v/axp173.svg?style=flat)](https://crates.io/crates/axp173)
 [![](https://img.shields.io/crates/d/axp173.svg?maxAge=3600)](https://crates.io/crates/axp173)
 
-<img src="doc/axp173.jpg" width="200" height="200">
-<img src="doc/axp173_block_diagram.png" width="300" height="600">
+<img src="doc/axp173.jpg" width="200" height="200"><img src="doc/axp173_block_diagram.png" width="400" height="800">
 
 ## What is this?
 
