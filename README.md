@@ -44,6 +44,11 @@ TODO
 
 What is done and tested and what is not yet:
 
+- [ ] Coulomb counter reading
+- [ ] Coulomb counter control
+- [ ] DC/DC settings
+- [ ] IRQs
+- [ ] ADC readings
 - [x] AXP173 on-chip buffer check
 - [x] AXP173 LDO2, LDO3, LDO4 enable/disable
 - [x] LDO voltage setup
@@ -55,3 +60,4 @@ What is done and tested and what is not yet:
 - [x] Internal ADC settings:
   - [x] Sample rate
   - [x] Enable/Disable various ADC channels (batt. voltage, current, etc.)
+- [ ] Button settings
