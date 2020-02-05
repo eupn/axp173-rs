@@ -82,21 +82,21 @@ where
     }
 
     /// Enables selected LDO with selected output voltage.
-    pub fn enable_ldo(&mut self, ldo: &Axp173Ldo) -> Result<(), Error<E>> {
+    pub fn enable_ldo(&mut self, ldo: &Ldo) -> Result<(), Error<E>> {
         self.set_ldo_voltage(&ldo)?;
         self.switch_ldo(&ldo.kind, true)
     }
 
     /// Disables selected LDO.
-    pub fn disable_ldo(&mut self, ldo: &Axp173LdoKind) -> Result<(), Error<E>> {
+    pub fn disable_ldo(&mut self, ldo: &LdoKind) -> Result<(), Error<E>> {
         self.switch_ldo(ldo, false)
     }
 
-    fn switch_ldo(&mut self, ldo: &Axp173LdoKind, enable: bool) -> Result<(), Error<E>> {
+    fn switch_ldo(&mut self, ldo: &LdoKind, enable: bool) -> Result<(), Error<E>> {
         let bit = match ldo {
-            Axp173LdoKind::LDO2 => POWER_ON_OFF_REG_LDO2_ON,
-            Axp173LdoKind::LDO3 => POWER_ON_OFF_REG_LDO3_ON,
-            Axp173LdoKind::LDO4 => POWER_ON_OFF_REG_LDO4_ON,
+            LdoKind::LDO2 => POWER_ON_OFF_REG_LDO2_ON,
+            LdoKind::LDO3 => POWER_ON_OFF_REG_LDO3_ON,
+            LdoKind::LDO4 => POWER_ON_OFF_REG_LDO4_ON,
         };
 
         let mut bits = self.read_u8(POWER_ON_OFF_REG).map_err(Error::I2c)?;
@@ -108,10 +108,10 @@ where
         Ok(())
     }
 
-    fn set_ldo_voltage(&mut self, ldo: &Axp173Ldo) -> Result<(), Error<E>> {
+    fn set_ldo_voltage(&mut self, ldo: &Ldo) -> Result<(), Error<E>> {
         let reg = match &ldo.kind {
-            Axp173LdoKind::LDO2 | Axp173LdoKind::LDO3 => LDO2_LDO3_OUT_VOL_REG,
-            Axp173LdoKind::LDO4 => LDO4_OUT_VOL_REG,
+            LdoKind::LDO2 | LdoKind::LDO3 => LDO2_LDO3_OUT_VOL_REG,
+            LdoKind::LDO4 => LDO4_OUT_VOL_REG,
         };
 
         let voltage = ldo.voltage;
@@ -119,9 +119,9 @@ where
         let mut bits = self.read_u8(reg).map_err(Error::I2c)?;
 
         let bits_range = match &ldo.kind {
-            Axp173LdoKind::LDO2 => 4..8,
-            Axp173LdoKind::LDO3 => 0..4,
-            Axp173LdoKind::LDO4 => 0..7,
+            LdoKind::LDO2 => 4..8,
+            LdoKind::LDO3 => 0..4,
+            LdoKind::LDO4 => 0..7,
         };
 
         bits.set_bits(bits_range, voltage);
@@ -152,19 +152,19 @@ where
 }
 
 /// Voltage regulators in AXP173 that can be enabled or disabled.
-pub enum Axp173LdoKind {
+pub enum LdoKind {
     LDO2,
     LDO3,
     LDO4,
 }
 
 /// LDO of AXP173.
-pub struct Axp173Ldo {
-    kind: Axp173LdoKind,
+pub struct Ldo {
+    kind: LdoKind,
     voltage: u8,
 }
 
-impl Axp173Ldo {
+impl Ldo {
     /// Selects LDO2 voltage.
     /// `voltage`: four bit voltage: 1.8 - 3.3V, 100 mV per LSB.
     /// # Panics
@@ -173,7 +173,7 @@ impl Axp173Ldo {
         assert!(voltage <= 0b1111); // Only 4-bit wide
 
         Self {
-            kind: Axp173LdoKind::LDO2,
+            kind: LdoKind::LDO2,
             voltage,
         }
     }
@@ -187,7 +187,7 @@ impl Axp173Ldo {
         assert!(voltage <= 0b1111); // Only 4-bit wide
 
         Self {
-            kind: Axp173LdoKind::LDO3,
+            kind: LdoKind::LDO3,
             voltage,
         }
     }
@@ -201,7 +201,7 @@ impl Axp173Ldo {
         assert!(voltage <= 0b1111111); // Only 7-bit wide
 
         Self {
-            kind: Axp173LdoKind::LDO4,
+            kind: LdoKind::LDO4,
             voltage,
         }
     }
