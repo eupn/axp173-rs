@@ -2,6 +2,9 @@
 
 ///! X-Powers AXP173 Power Management IC
 ///! Datasheet: [/doc/AXP173 Datasheet v1.12_cn.zh-CN.en.pdf]
+
+use core::ops::Range;
+
 use embedded_hal::blocking::i2c::{Write, WriteRead};
 
 use bit_field::BitField;
@@ -131,6 +134,54 @@ where
         Ok(())
     }
 
+    /// Sets charging current of the battery. Adjust this for an efficient and safe charging of
+    /// your lithium battery's capacity.
+    pub fn set_charging_current(&mut self, current: ChargingCurrent) -> Result<(), Error<E>> {
+        let mut bits = self.read_u8(POWER_CHARGE1).map_err(Error::I2c)?;
+        bits.set_bits(POWER_CHARGE1_CURRENT_SETTING, current.bits());
+
+        self.write_u8(POWER_CHARGE1, bits).map_err(Error::I2c)?;
+
+        Ok(())
+    }
+
+    /// Sets battery charging regulation voltage. This value varies depending on battery's chemistry
+    /// and should be as close to the value from battery's datasheet as possible to ensure
+    /// efficient charging and long battery life.
+    pub fn set_charging_voltage(&mut self, voltage: ChargingVoltage) -> Result<(), Error<E>> {
+        let mut bits = self.read_u8(POWER_CHARGE1).map_err(Error::I2c)?;
+        bits.set_bits(POWER_CHARGE1_VOLTAGE_SETTING, voltage.bits());
+
+        self.write_u8(POWER_CHARGE1, bits).map_err(Error::I2c)?;
+
+        Ok(())
+    }
+
+    /// Enables or disables battery charging.
+    pub fn set_charging(&mut self, enabled: bool) -> Result<(), Error<E>> {
+        let mut bits = self.read_u8(POWER_CHARGE1).map_err(Error::I2c)?;
+        bits.set_bit(POWER_CHARGE1_ENABLE_CHARGING, enabled);
+
+        self.write_u8(POWER_CHARGE1, bits).map_err(Error::I2c)?;
+
+        Ok(())
+    }
+
+    /// Enables or disables certain ADC functions of AXP173.
+    pub fn set_adc_settings(&mut self, adc_settings: &AdcSettings) -> Result<(), Error<E>> {
+        // Set the contents of ADC enable/disable register.
+        let mut bits = self.read_u8(POWER_ADC_EN1).map_err(Error::I2c)?;
+        adc_settings.write_adc_en_bits(&mut bits);
+        self.write_u8(POWER_ADC_EN1, bits).map_err(Error::I2c)?;
+
+        // Set ADC sample rate
+        let mut bits = self.read_u8(POWER_ADC_SPEED_TS).map_err(Error::I2c)?;
+        adc_settings.write_adc_sample_rate_and_ts_bits(&mut bits);
+        self.write_u8(POWER_ADC_SPEED_TS, bits).map_err(Error::I2c)?;
+
+        Ok(())
+    }
+
     fn read_u8(&mut self, reg: u8) -> Result<u8, E> {
         let mut byte: [u8; 1] = [0; 1];
 
@@ -207,14 +258,208 @@ impl Ldo {
     }
 }
 
+/// ADC settings structure
+#[derive(Debug)]
+pub struct AdcSettings {
+    batt_voltage_adc_enable: Option<bool>,
+    batt_current_adc_enable: Option<bool>,
+
+    acin_voltage_adc_enable: Option<bool>,
+    acin_current_adc_enable: Option<bool>,
+
+    vbus_voltage_adc_enable: Option<bool>,
+    vbus_current_adc_enable: Option<bool>,
+
+    aps_voltage_adc_enable: Option<bool>,
+    ts_adc_enable: Option<bool>,
+
+    sample_rate: Option<AdcSampleRate>,
+    use_ts_for_battery_temperature: Option<bool>,
+    ts_pin_mode: Option<TsPinMode>,
+}
+
+impl Default for AdcSettings {
+    /// Default state of settings, nothing is affected.
+    fn default() -> Self {
+        Self {
+            batt_voltage_adc_enable: None,
+            batt_current_adc_enable: None,
+            acin_voltage_adc_enable: None,
+            acin_current_adc_enable: None,
+            vbus_voltage_adc_enable: None,
+            vbus_current_adc_enable: None,
+            aps_voltage_adc_enable: None,
+            ts_adc_enable: None,
+
+            sample_rate: None,
+            use_ts_for_battery_temperature: None,
+            ts_pin_mode: None,
+        }
+    }
+}
+
+impl AdcSettings {
+    /// Battery voltage sensing ADC on/off.
+    pub fn batt_voltage_adc(&mut self, enabled: bool) -> &mut Self {
+        self.batt_voltage_adc_enable = Some(enabled);
+        self
+    }
+
+    /// Battery current sensing ADC on/off.
+    pub fn batt_current_adc(&mut self, enabled: bool) -> &mut Self {
+        self.batt_current_adc_enable = Some(enabled);
+        self
+    }
+
+    /// AC voltage ADC on/off.
+    pub fn acin_voltage_adc(&mut self, enabled: bool) -> &mut Self {
+        self.acin_voltage_adc_enable = Some(enabled);
+        self
+    }
+
+    /// AC current sensing ADC on/off.
+    pub fn acin_current_adc(&mut self, enabled: bool) -> &mut Self {
+        self.acin_current_adc_enable = Some(enabled);
+        self
+    }
+
+    /// VBUS voltage ADC on/off.
+    pub fn vbus_voltage_adc(&mut self, enabled: bool) -> &mut Self {
+        self.vbus_voltage_adc_enable = Some(enabled);
+        self
+    }
+
+    /// VBUS current sensing ADC on/off.
+    pub fn vbus_current_adc(&mut self, enabled: bool) -> &mut Self {
+        self.vbus_current_adc_enable = Some(enabled);
+        self
+    }
+
+    /// APS ADC on/off.
+    pub fn aps_voltage_adc(&mut self, enabled: bool) -> &mut Self {
+        self.aps_voltage_adc_enable = Some(enabled);
+        self
+    }
+
+    /// Battery temperature sensor (thermistor on TS pin) ADC on/off.
+    pub fn ts_adc(&mut self, enabled: bool) -> &mut Self {
+        self.ts_adc_enable = Some(enabled);
+        self
+    }
+
+    /// Sets ADC sampling rate.
+    pub fn set_adc_sample_rate(&mut self, sample_rate: AdcSampleRate) -> &mut Self {
+        self.sample_rate = Some(sample_rate);
+        self
+    }
+
+    pub fn use_ts_for_batt_temperature(&mut self, enabled: bool) -> &mut Self {
+        self.use_ts_for_battery_temperature = Some(enabled);
+        self
+    }
+
+    pub fn set_ts_pin_mode(&mut self, mode: TsPinMode) -> &mut Self {
+        self.ts_pin_mode = Some(mode);
+        self
+    }
+
+    /// Sets or remove corresponding bits in `previous_value`.
+    fn write_adc_en_bits(&self, previous_value: &mut u8) {
+        if let Some(enabled) = self.batt_voltage_adc_enable {
+            previous_value.set_bit(ADC_ENABLE1_BATT_VOLTAGE_ADC_ENABLE, enabled);
+        }
+        if let Some(enabled) = self.batt_current_adc_enable {
+            previous_value.set_bit(ADC_ENABLE1_BATT_CURRENT_ADC_ENABLE, enabled);
+        }
+
+        if let Some(enabled) = self.acin_voltage_adc_enable {
+            previous_value.set_bit(ADC_ENABLE1_ACIN_VOLTAGE_ADC_ENABLE, enabled);
+        }
+        if let Some(enabled) = self.acin_current_adc_enable {
+            previous_value.set_bit(ADC_ENABLE1_ACIN_CURRENT_ADC_ENABLE, enabled);
+        }
+
+        if let Some(enabled) = self.vbus_voltage_adc_enable {
+            previous_value.set_bit(ADC_ENABLE1_VBUS_VOLTAGE_ADC_ENABLE, enabled);
+        }
+        if let Some(enabled) = self.vbus_current_adc_enable {
+            previous_value.set_bit(ADC_ENABLE1_VBUS_CURRENT_ADC_ENABLE, enabled);
+        }
+
+        if let Some(enabled) = self.aps_voltage_adc_enable {
+            previous_value.set_bit(ADC_ENABLE1_APS_VOLTAGE_ADC_ENABLE, enabled);
+        }
+        if let Some(enabled) = self.ts_adc_enable {
+            previous_value.set_bit(ADC_ENABLE1_TS_ADC_ENABLE, enabled);
+        }
+    }
+
+    fn write_adc_sample_rate_and_ts_bits(&self, bits: &mut u8) {
+        if let Some(rate) = self.sample_rate {
+            bits.set_bits(ADC_SAMPLE_RATE_BITS, rate.bits());
+        }
+
+        if let Some(enable) = self.use_ts_for_battery_temperature {
+            bits.set_bit(TS_BATT_TEMPERATURE_FUNCTION, enable);
+        }
+
+        if let Some(ts_mode) = self.ts_pin_mode {
+            bits.set_bits(TS_MODE_BITS, ts_mode.bits());
+        }
+    }
+}
+
 // --- Register bitflags ---
 
 bitflags! {
+    /// Possible values of charger's regulation voltage in volts.
     pub struct ChargingVoltage: u8 {
         const V4_1  = 0b00;
         const V4_15 = 0b01;
         const V4_2  = 0b10; // default
         const V4_36 = 0b11;
+    }
+}
+
+bitflags! {
+    /// Possible values of charging current of AXP173 in milliAmperes
+    pub struct ChargingCurrent: u8 {
+        const CURRENT_100MA = 0b0000;
+        const CURRENT_190MA = 0b0001;
+        const CURRENT_280MA = 0b0010;
+        const CURRENT_360MA = 0b0011;
+        const CURRENT_450MA = 0b0100;
+        const CURRENT_550MA = 0b0101;
+        const CURRENT_630MA = 0b0110;
+        const CURRENT_700MA = 0b0111;
+        const CURRENT_780MA = 0b1000; // default
+        const CURRENT_880MA = 0b1001;
+        const CURRENT_960MA = 0b1010;
+        const CURRENT_1000MA = 0b1011;
+        const CURRENT_1080MA = 0b1100;
+        const CURRENT_1160MA = 0b1101;
+        const CURRENT_1240MA = 0b1110;
+        const CURRENT_1320MA = 0b1111;
+    }
+}
+
+bitflags! {
+    /// Possible values of ADC sample rate in Hertz.
+    pub struct AdcSampleRate: u8 {
+        const RATE_20HZ = 0b00; // default
+        const RATE_50HZ = 0b01;
+        const RATE_100HZ = 0b10;
+        const RATE_200HZ = 0b11;
+    }
+}
+
+bitflags! {
+    /// Possible thermistor pin function modes.
+    pub struct TsPinMode: u8 {
+        const SHUT_DOWN = 0b00;
+        const ON_DURING_CHARGING = 0b01;
+        const ON_DURING_ADC_SAMPLING = 0b10; // default
+        const ALWAYS_ON = 0b11;
     }
 }
 
@@ -259,7 +504,7 @@ pub const POWER_DCDC_MODESET: u8 = 0x80;
 pub const POWER_VOUT_MONITOR: u8 = 0x81;
 pub const POWER_ADC_EN1: u8 = 0x82;
 pub const POWER_ADC_EN2: u8 = 0x83;
-pub const POWER_ADC_SPEED: u8 = 0x84;
+pub const POWER_ADC_SPEED_TS: u8 = 0x84;
 pub const POWER_ADC_INPUTRANGE: u8 = 0x85;
 pub const POWER_TIMER_CTL: u8 = 0x8A;
 pub const POWER_VBUS_DET_SRP: u8 = 0x8B;
@@ -403,3 +648,23 @@ pub const POWER_ON_OFF_REG_LDO2_ON: usize = 2;
 pub const POWER_ON_OFF_REG_LDO3_ON: usize = 3;
 pub const POWER_ON_OFF_REG_LDO4_ON: usize = 1;
 pub const POWER_ON_OFF_REG_POWER_OFF: usize = 7;
+
+// POWER_CHARGE1 register bits
+pub const POWER_CHARGE1_CURRENT_SETTING: Range<usize> = 0..4;
+pub const POWER_CHARGE1_VOLTAGE_SETTING: Range<usize> = 5..6;
+pub const POWER_CHARGE1_ENABLE_CHARGING: usize = 7; // enabled by default
+
+// ADC_ENABLE1 register bits
+pub const ADC_ENABLE1_BATT_VOLTAGE_ADC_ENABLE: usize = 7; // enabled by default
+pub const ADC_ENABLE1_BATT_CURRENT_ADC_ENABLE: usize = 6;
+pub const ADC_ENABLE1_ACIN_VOLTAGE_ADC_ENABLE: usize = 5;
+pub const ADC_ENABLE1_ACIN_CURRENT_ADC_ENABLE: usize = 4;
+pub const ADC_ENABLE1_VBUS_VOLTAGE_ADC_ENABLE: usize = 3;
+pub const ADC_ENABLE1_VBUS_CURRENT_ADC_ENABLE: usize = 2;
+pub const ADC_ENABLE1_APS_VOLTAGE_ADC_ENABLE: usize = 1; // enabled by default
+pub const ADC_ENABLE1_TS_ADC_ENABLE: usize = 0; // enabled by default
+
+// POWER_ADC_SPEED bits
+pub const ADC_SAMPLE_RATE_BITS: Range<usize> = 6..8;
+pub const TS_BATT_TEMPERATURE_FUNCTION: usize = 2;
+pub const TS_MODE_BITS: Range<usize> = 0..2;
