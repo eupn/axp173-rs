@@ -446,7 +446,7 @@ bitflags! {
 bitflags! {
     /// Possible values of ADC sample rate in Hertz.
     pub struct AdcSampleRate: u8 {
-        const RATE_20HZ = 0b00; // default
+        const RATE_25HZ = 0b00; // default
         const RATE_50HZ = 0b01;
         const RATE_100HZ = 0b10;
         const RATE_200HZ = 0b11;
