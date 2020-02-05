@@ -1,6 +1,6 @@
-## X-Powers AXP173 PMIC embedded-hal driver
+## `axp173`
 
-[![](https://img.shields.io/travis/eupn/axp173.svg?style=flat)](https://travis-ci.org/eupn/axp173)
+<!-- [![](https://img.shields.io/travis/eupn/axp173.svg?style=flat)](https://travis-ci.org/eupn/axp173) -->
 [![](https://img.shields.io/crates/v/axp173.svg?style=flat)](https://crates.io/crates/axp173)
 [![](https://img.shields.io/crates/d/axp173.svg?maxAge=3600)](https://crates.io/crates/axp173)
 
@@ -44,9 +44,14 @@ TODO
 
 What is done and tested and what is not yet:
 
+- [x] AXP173 on-chip buffer check
 - [x] AXP173 LDO2, LDO3, LDO4 enable/disable
 - [x] LDO voltage setup
 - [x] VBUS presence
 - [x] Battery presence
 - [x] Battery charging status
-- [x] AXP173 on-chip buffer check
+- [x] Charging current setup
+- [x] Charging regulated voltage setup
+- [x] Internal ADC settings:
+  - [x] Sample rate
+  - [x] Enable/Disable various ADC channels (batt. voltage, current, etc.)
