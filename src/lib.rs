@@ -18,7 +18,7 @@ use regs::*;
 
 pub use adc::AdcSettings;
 pub use ldo::{Ldo, LdoKind};
-pub use regs::{AdcSampleRate, ChargingCurrent, ChargingVoltage};
+pub use regs::{AdcSampleRate, ChargingCurrent, ChargingVoltage, TsPinMode};
 
 /// AXP173 I2C address
 /// 7-bit: 0x34

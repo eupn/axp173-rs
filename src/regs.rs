@@ -94,9 +94,16 @@ bitflags! {
 bitflags! {
     /// Possible thermistor pin function modes.
     pub struct TsPinMode: u8 {
+        /// TS pin is shut down.
         const SHUT_DOWN = 0b00;
+
+        /// TS is used during charging.
         const ON_DURING_CHARGING = 0b01;
-        const ON_DURING_ADC_SAMPLING = 0b10; // default
+
+        /// TS is used only during ADC sampling. Default.
+        const ON_DURING_ADC_SAMPLING = 0b10;
+
+        /// TS is always used.
         const ALWAYS_ON = 0b11;
     }
 }
