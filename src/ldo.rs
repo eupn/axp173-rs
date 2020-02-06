@@ -50,7 +50,7 @@ impl Ldo {
     /// # Panics
     /// Panics if supplied voltage value is greater than 2^7 due to failed assertion.
     pub fn ldo4_with_voltage(voltage: u8) -> Self {
-        assert!(voltage <= 0b1111111); // Only 7-bit wide
+        assert!(voltage <= 0b111_1111); // Only 7-bit wide
 
         Self {
             kind: LdoKind::LDO4,

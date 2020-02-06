@@ -50,9 +50,7 @@ where
     /// Side-effect-free constructor.
     /// Nothing will be read or written before `init()` call.
     pub fn new(i2c: I) -> Self {
-        let axp = Axp173 { i2c };
-
-        axp
+        Axp173 { i2c }
     }
 
     /// Checks the I2C connection to the AXP173 chip.
@@ -79,6 +77,7 @@ where
     }
 
     /// Writes 6-byte user data buffer into the chip.
+    #[allow(clippy::trivially_copy_pass_by_ref)] // On 32-bit ARMs it is not efficient to pass by value
     pub fn write_onchip_buffer(&mut self, bytes: &[u8; 6]) -> Result<(), E> {
         let mut buf = [0u8; 6 + 1];
 
