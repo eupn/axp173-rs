@@ -51,7 +51,10 @@ What is done and tested and what is not yet:
 - [ ] DC/DC settings
 - [ ] IRQs
 - [ ] ADC readings
-- [x] AXP173 on-chip buffer check
+- [x] AXP173 on-chip buffer
+  - [x] Reading
+  - [x] Checking default values
+  - [x] Writing
 - [x] AXP173 LDO2, LDO3, LDO4 enable/disable
 - [x] LDO voltage setup
 - [x] VBUS presence
