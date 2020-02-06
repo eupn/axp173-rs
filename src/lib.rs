@@ -10,15 +10,15 @@ use embedded_hal::blocking::i2c::{Write, WriteRead};
 use bit_field::BitField;
 //use byteorder::{ByteOrder, LittleEndian};
 
-mod regs;
 mod adc;
 mod ldo;
+mod regs;
 
 use regs::*;
 
 pub use adc::AdcSettings;
-pub use regs::{AdcSampleRate, ChargingCurrent, ChargingVoltage};
 pub use ldo::{Ldo, LdoKind};
+pub use regs::{AdcSampleRate, ChargingCurrent, ChargingVoltage};
 
 /// AXP173 I2C address
 /// 7-bit: 0x34
@@ -206,7 +206,8 @@ where
         // Set ADC sample rate
         let mut bits = self.read_u8(POWER_ADC_SPEED_TS).map_err(Error::I2c)?;
         adc_settings.write_adc_sample_rate_and_ts_bits(&mut bits);
-        self.write_u8(POWER_ADC_SPEED_TS, bits).map_err(Error::I2c)?;
+        self.write_u8(POWER_ADC_SPEED_TS, bits)
+            .map_err(Error::I2c)?;
 
         Ok(())
     }
