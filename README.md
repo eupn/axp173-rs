@@ -26,15 +26,17 @@ It's device-agnostic and uses embedded-hal's `Write`/`WriteRead` for I2C communi
     ```rust
     // ... declare and configure your I2c peripheral ...
     
-    // Init BNO055 IMU
+    // Init AXP173 PMIC
     let axp173 = axp173::Axp173::new(i2c);
-    
     axp173.init()?;
-    
     Ok(axp173)
     ```
 
-3. TODO
+3. Configure the PMIC
+
+   ```rust
+   todo!()
+   ```
 
 ## Details and examples
 
@@ -61,3 +63,4 @@ What is done and tested and what is not yet:
   - [x] Sample rate
   - [x] Enable/Disable various ADC channels (batt. voltage, current, etc.)
 - [ ] Button settings
+
