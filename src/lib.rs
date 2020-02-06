@@ -78,6 +78,20 @@ where
         Ok(buf)
     }
 
+    /// Writes 6-byte user data buffer into the chip.
+    pub fn write_onchip_buffer(&mut self, bytes: &[u8; 6]) -> Result<(), E> {
+        let mut buf = [0u8; 6 + 1];
+
+        buf[0] = POWER_DATA_BUFFER1;
+        for (i, byte) in bytes.iter().enumerate() {
+            buf[i + 1] = *byte;
+        }
+
+        self.i2c.write(AXP173_ADDR, &buf[..])?;
+
+        Ok(())
+    }
+
     /// Returns `true` if device is connected to the USB power source.
     pub fn vbus_present(&mut self) -> Result<bool, Error<E>> {
         let reg_val = self.read_u8(POWER_STATUS).map_err(Error::I2c)?;
