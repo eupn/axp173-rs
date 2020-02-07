@@ -237,7 +237,7 @@ pub const POWER_BAT_POWERL8: u8 = 0x72;
 pub const POWER_ON_OFF_REG: u8 = 0x12;
 pub const EXTEN: u8 = 1 << 6;
 
-pub const DC1_ON: u8 = 1 << 0;
+pub const DC1_ON: u8 = 1;
 pub const DC2_ON: u8 = 1 << 4;
 
 pub const DC2_REG: u8 = 0x23;
@@ -271,12 +271,12 @@ pub const INT2_BATTERY_OUT: u8 = 1 << 6;
 pub const INT2_BATTERY_CHARGING: u8 = 1 << 3;
 pub const INT2_BATTERY_CHARGED: u8 = 1 << 2;
 pub const INT2_BATTERY_HIGH_TEMP: u8 = 1 << 1;
-pub const INT2_BATTERY_LOW_TEMP: u8 = 1 << 0;
+pub const INT2_BATTERY_LOW_TEMP: u8 = 1;
 pub const INT3_SHORTPRESS_PEK: u8 = 1 << 1;
-pub const INT3_LONGPRESS_PEK: u8 = 1 << 0;
+pub const INT3_LONGPRESS_PEK: u8 = 1;
 pub const INT3_LOWVOLTAGE_WARNING: u8 = 1 << 4;
 pub const INT4_LOWVOLTAGE_WARNING1: u8 = 1 << 1;
-pub const INT4_LOWVOLTAGE_WARNING2: u8 = 1 << 0;
+pub const INT4_LOWVOLTAGE_WARNING2: u8 = 1;
 pub const INT5_TIMER: u8 = 1 << 7;
 
 // POWER_STATUS register bits
