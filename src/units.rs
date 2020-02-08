@@ -23,16 +23,19 @@ impl Voltage {
     }
 
     /// Returns milliVolts value.
+    #[allow(clippy::trivially_copy_pass_by_ref)] // On 32-bit ARMs it is not efficient to pass by value
     pub fn as_millivolts(&self) -> u16 {
         self.raw * self.coeff / 10
     }
 
     /// Returns volts value.
+    #[allow(clippy::trivially_copy_pass_by_ref)] // On 32-bit ARMs it is not efficient to pass by value
     pub fn as_volts(&self) -> f32 {
         self.as_millivolts() as f32 / 1000.0_f32
     }
 
     /// Returns raw ADC reading value.
+    #[allow(clippy::trivially_copy_pass_by_ref)] // On 32-bit ARMs it is not efficient to pass by value
     pub fn raw(&self) -> u16 {
         self.raw
     }
@@ -56,16 +59,19 @@ impl Current {
     }
 
     /// Returns milliAmperes value.
+    #[allow(clippy::trivially_copy_pass_by_ref)] // On 32-bit ARMs it is not efficient to pass by value
     pub fn as_milliamps(&self) -> u16 {
         self.raw * self.coeff / self.div
     }
 
     /// Returns Amperes value.
+    #[allow(clippy::trivially_copy_pass_by_ref)] // On 32-bit ARMs it is not efficient to pass by value
     pub fn as_amperes(&self) -> f32 {
         self.as_milliamps() as f32 / 1000.0_f32
     }
 
     /// Returns raw ADC reading value.
+    #[allow(clippy::trivially_copy_pass_by_ref)] // On 32-bit ARMs it is not efficient to pass by value
     pub fn raw(&self) -> u16 {
         self.raw
     }
