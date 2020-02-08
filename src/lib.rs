@@ -8,12 +8,13 @@
 use embedded_hal::blocking::i2c::{Write, WriteRead};
 
 use bit_field::BitField;
-//use byteorder::{ByteOrder, LittleEndian};
 
 mod adc;
 mod ldo;
 mod regs;
+mod units;
 
+use units::*;
 use regs::*;
 
 pub use adc::AdcSettings;
@@ -212,6 +213,57 @@ where
             .map_err(Error::I2c)?;
 
         Ok(())
+    }
+
+    /// Returns VBUS voltage.
+    pub fn vbus_voltage(&mut self) -> Axp173Result<Voltage, E> {
+        let res = self.read_u12(POWER_VBUS_VOL_H8).map_err(Error::I2c)?;
+
+        Ok(Voltage::new(res, VBUS_VOLTAGE_COEFF))
+    }
+
+    /// Returns battery charging current.
+    pub fn vbus_current(&mut self) -> Axp173Result<Current, E> {
+        let res = self.read_u13(POWER_VBUS_CUR_H8).map_err(Error::I2c)?;
+
+        Ok(Current::new(res, VBUS_CURRENT_COEFF, VBUS_CURRENT_DIV))
+    }
+
+    /// Returns battery voltage.
+    pub fn batt_voltage(&mut self) -> Axp173Result<Voltage, E> {
+        let res = self.read_u12(POWER_BAT_AVERVOL_H8).map_err(Error::I2c)?;
+
+        Ok(Voltage::new(res, BATT_VOLTAGE_COEFF))
+    }
+
+    /// Returns battery charging current.
+    pub fn batt_charge_current(&mut self) -> Axp173Result<Current, E> {
+        let res = self.read_u13(POWER_BAT_AVERCHGCUR_H8).map_err(Error::I2c)?;
+
+        Ok(Current::new(res, BATT_CURRENT_COEFF, BATT_CURRENT_DIV))
+    }
+
+    /// Returns battery discharging current.
+    pub fn batt_discharge_current(&mut self) -> Axp173Result<Current, E> {
+        let res = self.read_u13(POWER_BAT_AVERDISCHGCUR_H8).map_err(Error::I2c)?;
+
+        Ok(Current::new(res, BATT_CURRENT_COEFF, BATT_CURRENT_DIV))
+    }
+
+    /// Reads a 12-bit integer from two consecutive registers.
+    fn read_u12(&mut self, msb_reg: u8) -> Result<u16, E> {
+        let msb = self.read_u8(msb_reg)? as u16;
+        let lsb = self.read_u8(msb_reg + 1)? as u16 & 0b1111;
+
+        Ok(msb << 4 | lsb)
+    }
+
+    /// Reads a 13-bit integer from two consecutive registers.
+    fn read_u13(&mut self, msb_reg: u8) -> Result<u16, E> {
+        let msb = self.read_u8(msb_reg)? as u16;
+        let lsb = self.read_u8(msb_reg + 1)? as u16 & 0b11111;
+
+        Ok(msb << 5 | lsb)
     }
 
     fn read_u8(&mut self, reg: u8) -> Result<u8, E> {
