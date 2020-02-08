@@ -11,18 +11,18 @@ pub(crate) const BATT_CURRENT_DIV: u16 = 2;
 #[derive(Debug, Copy, Clone)]
 pub struct Voltage {
     raw: u16,
-    coeff: u16,
+    mul: u16,
 }
 
 impl Voltage {
-    pub(crate) fn new(raw: u16, coeff: u16) -> Self {
-        Self { raw, coeff }
+    pub(crate) fn new(raw: u16, mul: u16) -> Self {
+        Self { raw, mul }
     }
 
     /// Returns milliVolts value.
     #[allow(clippy::trivially_copy_pass_by_ref)] // On 32-bit ARMs it is not efficient to pass by value
     pub fn as_millivolts(&self) -> u16 {
-        self.raw * self.coeff / 10
+        self.raw * self.mul / 10
     }
 
     /// Returns volts value.
@@ -42,21 +42,21 @@ impl Voltage {
 #[derive(Debug, Copy, Clone)]
 pub struct Current {
     raw: u16,
-    coeff: u16,
+    mul: u16,
     div: u16,
 }
 
 impl Current {
-    pub(crate) fn new(raw: u16, coeff: u16, div: u16) -> Self {
+    pub(crate) fn new(raw: u16, mul: u16, div: u16) -> Self {
         assert!(div > 0);
 
-        Self { raw, coeff, div }
+        Self { raw, mul, div }
     }
 
     /// Returns milliAmperes value.
     #[allow(clippy::trivially_copy_pass_by_ref)] // On 32-bit ARMs it is not efficient to pass by value
     pub fn as_milliamps(&self) -> f32 {
-        self.raw as f32 * self.coeff as f32 / self.div as f32
+        self.raw as f32 * self.mul as f32 / self.div as f32
     }
 
     /// Returns Amperes value.
