@@ -5,9 +5,9 @@
 #![deny(missing_docs)]
 #![deny(unsafe_code)]
 
-use embedded_hal::blocking::i2c::{Write, WriteRead};
-
 use bit_field::BitField;
+use byteorder::{BigEndian, ByteOrder};
+use embedded_hal::blocking::i2c::{Write, WriteRead};
 
 mod adc;
 mod ldo;
@@ -250,6 +250,80 @@ where
             .map_err(Error::I2c)?;
 
         Ok(Current::new(res, BATT_CURRENT_COEFF, BATT_CURRENT_DIV))
+    }
+
+    /// Enables or disables battery coulomb counter (e.g. fuel gauge).
+    ///
+    /// NOTE:
+    /// 1. `false` will disable coulomb counter and reset its values to 0.
+    /// If you want to pause the counter, use `pause_coulomb_counter` instead.
+    ///
+    /// 2. If coulomb counter was paused before, use `resume_coulomb_counter`.
+    pub fn set_coulomb_counter(&mut self, enabled: bool) -> OperationResult<E> {
+        let mut reg = self.read_u8(POWER_COULOMB_CTL).map_err(Error::I2c)?;
+
+        reg.set_bit(COULOMB_ENABLE, enabled);
+
+        self.write_u8(POWER_COULOMB_CTL, reg).map_err(Error::I2c)?;
+
+        Ok(())
+    }
+
+    /// Resets current coulomb counter value.
+    pub fn reset_coulomb_counter(&mut self) -> OperationResult<E> {
+        let mut reg = self.read_u8(POWER_COULOMB_CTL).map_err(Error::I2c)?;
+
+        reg.set_bit(COULOMB_RESET, true); // this bit is self-clearing
+
+        self.write_u8(POWER_COULOMB_CTL, reg).map_err(Error::I2c)?;
+
+        Ok(())
+    }
+
+    /// Pauses coulomb counter without resetting.
+    pub fn pause_coulomb_counter(&mut self) -> OperationResult<E> {
+        let mut reg = self.read_u8(POWER_COULOMB_CTL).map_err(Error::I2c)?;
+
+        reg.set_bit(COULOMB_PAUSE, true);
+
+        self.write_u8(POWER_COULOMB_CTL, reg).map_err(Error::I2c)?;
+
+        Ok(())
+    }
+
+    /// Resumes coulomb counter without resetting its values.
+    pub fn resume_coulomb_counter(&mut self) -> OperationResult<E> {
+        let mut reg = self.read_u8(POWER_COULOMB_CTL).map_err(Error::I2c)?;
+
+        reg.set_bit(COULOMB_PAUSE, false);
+
+        self.write_u8(POWER_COULOMB_CTL, reg).map_err(Error::I2c)?;
+
+        Ok(())
+    }
+
+    /// Returns current charging coulomb counter value (amount of current to battery).
+    pub fn read_charge_coulomb_counter(&mut self) -> Axp173Result<u32, E> {
+        let res = self.read_u32(POWER_BAT_CHGCOULOMB3).map_err(Error::I2c)?;
+
+        Ok(res)
+    }
+
+    /// Returns current discharging coulomb counter value (amount of current from battery).
+    pub fn read_discharge_coulomb_counter(&mut self) -> Axp173Result<u32, E> {
+        let res = self
+            .read_u32(POWER_BAT_DISCHGCOULOMB3)
+            .map_err(Error::I2c)?;
+
+        Ok(res)
+    }
+
+    fn read_u32(&mut self, msb_reg: u8) -> Result<u32, E> {
+        let mut bytes = [0u8; 4];
+
+        self.read_bytes(msb_reg, &mut bytes)?;
+
+        Ok(BigEndian::read_u32(&bytes[..]))
     }
 
     /// Reads a 12-bit integer from two consecutive registers.

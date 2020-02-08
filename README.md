@@ -46,8 +46,8 @@ TODO
 
 What is done and tested and what is not yet:
 
-- [ ] Coulomb counter reading
-- [ ] Coulomb counter control
+- [x] Coulomb counter reading
+- [x] Coulomb counter control
 - [ ] DC/DC settings
 - [ ] IRQs
 - [x] Battery voltage & current readings

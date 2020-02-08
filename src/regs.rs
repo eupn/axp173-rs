@@ -313,3 +313,8 @@ pub const ADC_ENABLE1_TS_ADC_ENABLE: usize = 0; // enabled by default
 pub const ADC_SAMPLE_RATE_BITS: Range<usize> = 6..8;
 pub const TS_BATT_TEMPERATURE_FUNCTION: usize = 2;
 pub const TS_MODE_BITS: Range<usize> = 0..2;
+
+// POWER_COULOMB_CTL bits
+pub const COULOMB_ENABLE: usize = 7;
+pub const COULOMB_PAUSE: usize = 6;
+pub const COULOMB_RESET: usize = 5;
