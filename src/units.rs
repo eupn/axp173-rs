@@ -48,6 +48,8 @@ pub struct Current {
 
 impl Current {
     pub(crate) fn new(raw: u16, coeff: u16, div: u16) -> Self {
+        assert!(div > 0);
+
         Self { raw, coeff, div }
     }
 
