@@ -55,8 +55,8 @@ impl Current {
 
     /// Returns milliAmperes value.
     #[allow(clippy::trivially_copy_pass_by_ref)] // On 32-bit ARMs it is not efficient to pass by value
-    pub fn as_milliamps(&self) -> u16 {
-        self.raw * self.coeff / self.div
+    pub fn as_milliamps(&self) -> f32 {
+        self.raw as f32 * self.coeff as f32 / self.div as f32
     }
 
     /// Returns Amperes value.
