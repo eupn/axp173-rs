@@ -1,6 +1,6 @@
 ## `axp173`
 
-<a href="https://actions-badge.atrox.dev/eupn/axp173/goto"><img src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Feupn%2Faxp173%2Fbadge&style=flat" alt="Build Status"/></a>
+![CI](https://github.com/eupn/axp173-rs/workflows/CI/badge.svg)
 [![](https://img.shields.io/crates/v/axp173.svg?style=flat)](https://crates.io/crates/axp173)
 [![](https://img.shields.io/crates/d/axp173.svg?maxAge=3600)](https://crates.io/crates/axp173)
 
