@@ -50,7 +50,9 @@ What is done and tested and what is not yet:
 - [ ] Coulomb counter control
 - [ ] DC/DC settings
 - [ ] IRQs
-- [ ] ADC readings
+- [x] Battery voltage & current readings
+- [x] VBUS voltage & current readings
+- [ ] Temperature sensor readings
 - [x] AXP173 on-chip buffer
   - [x] Reading
   - [x] Checking default values
