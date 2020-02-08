@@ -16,10 +16,7 @@ pub struct Voltage {
 
 impl Voltage {
     pub(crate) fn new(raw: u16, coeff: u16) -> Self {
-        Self {
-            raw,
-            coeff
-        }
+        Self { raw, coeff }
     }
 
     /// Returns milliVolts value.
@@ -51,11 +48,7 @@ pub struct Current {
 
 impl Current {
     pub(crate) fn new(raw: u16, coeff: u16, div: u16) -> Self {
-        Self {
-            raw,
-            coeff,
-            div,
-        }
+        Self { raw, coeff, div }
     }
 
     /// Returns milliAmperes value.

@@ -14,8 +14,8 @@ mod ldo;
 mod regs;
 mod units;
 
-use units::*;
 use regs::*;
+use units::*;
 
 pub use adc::AdcSettings;
 pub use ldo::{Ldo, LdoKind};
@@ -245,7 +245,9 @@ where
 
     /// Returns battery discharging current.
     pub fn batt_discharge_current(&mut self) -> Axp173Result<Current, E> {
-        let res = self.read_u13(POWER_BAT_AVERDISCHGCUR_H8).map_err(Error::I2c)?;
+        let res = self
+            .read_u13(POWER_BAT_AVERDISCHGCUR_H8)
+            .map_err(Error::I2c)?;
 
         Ok(Current::new(res, BATT_CURRENT_COEFF, BATT_CURRENT_DIV))
     }
