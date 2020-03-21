@@ -67,5 +67,5 @@ What is done and tested and what is not yet:
 - [x] Internal ADC settings:
   - [x] Sample rate
   - [x] Enable/Disable various ADC channels (batt. voltage, current, etc.)
-- [ ] Button settings
-
+- [x] Button settings
+- [ ] Instantaneous battery power reading
