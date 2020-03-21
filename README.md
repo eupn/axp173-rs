@@ -35,31 +35,31 @@ It's device-agnostic and uses embedded-hal's `Write`/`WriteRead` for I2C communi
 3. Configure the PMIC
 
    ```rust
-       // Set charging current to 100mA
-       axp173
-           .set_charging_current(ChargingCurrent::CURRENT_100MA)?;
-   
-       // Enable internal ADCs
-       // 25Hz sample rate, Disable TS, enable current sensing ADC
-       axp173
-           .set_adc_settings(
-               AdcSettings::default()
-                   .set_adc_sample_rate(AdcSampleRate::RATE_25HZ)
-                   .ts_adc(false)
-                   .set_ts_pin_mode(TsPinMode::SHUT_DOWN)
-                   .vbus_voltage_adc(true)
-                   .vbus_current_adc(true)
-                   .batt_voltage_adc(true)
-                   .batt_current_adc(true),
-           )?;
-   
-       // Enable battery gas gauge
-       axp173.set_coulomb_counter(true)?;
-       axp173.resume_coulomb_counter()?;
-   
-       // Power-off the device after 4 seconds of
-       // long press of power button
-       axp173.set_shutdown_long_press_time(ShutdownLongPressTime::SEC_4)?;
+   // Set charging current to 100mA
+   axp173
+       .set_charging_current(ChargingCurrent::CURRENT_100MA)?;
+
+   // Enable internal ADCs
+   // 25Hz sample rate, Disable TS, enable current sensing ADC
+   axp173
+       .set_adc_settings(
+           AdcSettings::default()
+               .set_adc_sample_rate(AdcSampleRate::RATE_25HZ)
+               .ts_adc(false)
+               .set_ts_pin_mode(TsPinMode::SHUT_DOWN)
+               .vbus_voltage_adc(true)
+               .vbus_current_adc(true)
+               .batt_voltage_adc(true)
+               .batt_current_adc(true),
+       )?;
+
+   // Enable battery gas gauge
+   axp173.set_coulomb_counter(true)?;
+   axp173.resume_coulomb_counter()?;
+
+   // Power-off the device after 4 seconds of
+   // long press of power button
+   axp173.set_shutdown_long_press_time(ShutdownLongPressTime::SEC_4)?;
    ```
 
 ## Details and examples
