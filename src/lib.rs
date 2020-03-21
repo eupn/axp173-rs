@@ -11,17 +11,16 @@ use embedded_hal::blocking::i2c::{Write, WriteRead};
 
 mod adc;
 mod ldo;
-mod regs;
 mod pek;
+mod regs;
 mod units;
-
-use regs::*;
-use units::*;
 
 pub use adc::AdcSettings;
 pub use ldo::{Ldo, LdoKind};
-pub use regs::{AdcSampleRate, ChargingCurrent, ChargingVoltage, TsPinMode};
 pub use pek::{BootTime, LongPressTime, ShutdownLongPressTime};
+use regs::*;
+pub use regs::{AdcSampleRate, ChargingCurrent, ChargingVoltage, TsPinMode};
+use units::*;
 
 /// AXP173 I2C address
 /// 7-bit: 0x34
@@ -335,7 +334,10 @@ where
     }
 
     /// Sets button press time to initiate shutdown or power-on.
-    pub fn set_shutdown_long_press_time(&mut self, time: ShutdownLongPressTime) -> OperationResult<E> {
+    pub fn set_shutdown_long_press_time(
+        &mut self,
+        time: ShutdownLongPressTime,
+    ) -> OperationResult<E> {
         let mut reg = self.read_u8(POWER_PEK_SET).map_err(Error::I2c)?;
         reg.set_bits(POWER_PEK_SHUTDOWN_LONG_PRESS_TIME_BITS, time.bits());
         self.write_u8(POWER_PEK_SET, reg).map_err(Error::I2c)

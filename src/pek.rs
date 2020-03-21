@@ -1,5 +1,4 @@
 ///! Power Enable Key definitions.
-
 use bitflags::bitflags;
 
 bitflags! {
