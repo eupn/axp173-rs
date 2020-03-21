@@ -12,6 +12,7 @@ use embedded_hal::blocking::i2c::{Write, WriteRead};
 mod adc;
 mod ldo;
 mod regs;
+mod pek;
 mod units;
 
 use regs::*;
@@ -20,6 +21,7 @@ use units::*;
 pub use adc::AdcSettings;
 pub use ldo::{Ldo, LdoKind};
 pub use regs::{AdcSampleRate, ChargingCurrent, ChargingVoltage, TsPinMode};
+pub use pek::{BootTime, LongPressTime, ShutdownLongPressTime};
 
 /// AXP173 I2C address
 /// 7-bit: 0x34
