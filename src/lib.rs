@@ -320,6 +320,34 @@ where
         Ok(res)
     }
 
+    /// Sets delay before power-on.
+    pub fn set_boot_time(&mut self, time: BootTime) -> OperationResult<E> {
+        let mut reg = self.read_u8(POWER_PEK_SET).map_err(Error::I2c)?;
+        reg.set_bits(POWER_PEK_BOOT_TIME_BITS, time.bits());
+        self.write_u8(POWER_PEK_SET, reg).map_err(Error::I2c)
+    }
+
+    /// Sets time that's considered a "long button press".
+    pub fn set_long_press_time(&mut self, time: LongPressTime) -> OperationResult<E> {
+        let mut reg = self.read_u8(POWER_PEK_SET).map_err(Error::I2c)?;
+        reg.set_bits(POWER_PEK_LONG_PRESS_TIME_BITS, time.bits());
+        self.write_u8(POWER_PEK_SET, reg).map_err(Error::I2c)
+    }
+
+    /// Sets button press time to initiate shutdown or power-on.
+    pub fn set_shutdown_long_press_time(&mut self, time: ShutdownLongPressTime) -> OperationResult<E> {
+        let mut reg = self.read_u8(POWER_PEK_SET).map_err(Error::I2c)?;
+        reg.set_bits(POWER_PEK_SHUTDOWN_LONG_PRESS_TIME_BITS, time.bits());
+        self.write_u8(POWER_PEK_SET, reg).map_err(Error::I2c)
+    }
+
+    /// Enables or disables long-press shutdown.
+    pub fn set_shutdown_long_press(&mut self, enabled: bool) -> OperationResult<E> {
+        let mut reg = self.read_u8(POWER_PEK_SET).map_err(Error::I2c)?;
+        reg.set_bit(POWER_PEK_LONG_PRESS_SHUTDOWN_BIT, enabled);
+        self.write_u8(POWER_PEK_SET, reg).map_err(Error::I2c)
+    }
+
     fn read_u32(&mut self, msb_reg: u8) -> Result<u32, E> {
         let mut bytes = [0u8; 4];
 
