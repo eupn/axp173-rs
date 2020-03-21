@@ -11,15 +11,16 @@ use embedded_hal::blocking::i2c::{Write, WriteRead};
 
 mod adc;
 mod ldo;
+mod pek;
 mod regs;
 mod units;
 
-use regs::*;
-use units::*;
-
 pub use adc::AdcSettings;
 pub use ldo::{Ldo, LdoKind};
+pub use pek::{BootTime, LongPressTime, ShutdownLongPressTime};
+use regs::*;
 pub use regs::{AdcSampleRate, ChargingCurrent, ChargingVoltage, TsPinMode};
+use units::*;
 
 /// AXP173 I2C address
 /// 7-bit: 0x34
@@ -316,6 +317,37 @@ where
             .map_err(Error::I2c)?;
 
         Ok(res)
+    }
+
+    /// Sets delay before power-on.
+    pub fn set_boot_time(&mut self, time: BootTime) -> OperationResult<E> {
+        let mut reg = self.read_u8(POWER_PEK_SET).map_err(Error::I2c)?;
+        reg.set_bits(POWER_PEK_BOOT_TIME_BITS, time.bits());
+        self.write_u8(POWER_PEK_SET, reg).map_err(Error::I2c)
+    }
+
+    /// Sets time that's considered a "long button press".
+    pub fn set_long_press_time(&mut self, time: LongPressTime) -> OperationResult<E> {
+        let mut reg = self.read_u8(POWER_PEK_SET).map_err(Error::I2c)?;
+        reg.set_bits(POWER_PEK_LONG_PRESS_TIME_BITS, time.bits());
+        self.write_u8(POWER_PEK_SET, reg).map_err(Error::I2c)
+    }
+
+    /// Sets button press time to initiate shutdown or power-on.
+    pub fn set_shutdown_long_press_time(
+        &mut self,
+        time: ShutdownLongPressTime,
+    ) -> OperationResult<E> {
+        let mut reg = self.read_u8(POWER_PEK_SET).map_err(Error::I2c)?;
+        reg.set_bits(POWER_PEK_SHUTDOWN_LONG_PRESS_TIME_BITS, time.bits());
+        self.write_u8(POWER_PEK_SET, reg).map_err(Error::I2c)
+    }
+
+    /// Enables or disables long-press shutdown.
+    pub fn set_shutdown_long_press(&mut self, enabled: bool) -> OperationResult<E> {
+        let mut reg = self.read_u8(POWER_PEK_SET).map_err(Error::I2c)?;
+        reg.set_bit(POWER_PEK_LONG_PRESS_SHUTDOWN_BIT, enabled);
+        self.write_u8(POWER_PEK_SET, reg).map_err(Error::I2c)
     }
 
     fn read_u32(&mut self, msb_reg: u8) -> Result<u32, E> {

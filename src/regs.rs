@@ -318,3 +318,9 @@ pub const TS_MODE_BITS: Range<usize> = 0..2;
 pub const COULOMB_ENABLE: usize = 7;
 pub const COULOMB_PAUSE: usize = 6;
 pub const COULOMB_RESET: usize = 5;
+
+// POWER_PEK_SET bits
+pub const POWER_PEK_BOOT_TIME_BITS: Range<usize> = 6..8;
+pub const POWER_PEK_LONG_PRESS_TIME_BITS: Range<usize> = 4..6;
+pub const POWER_PEK_LONG_PRESS_SHUTDOWN_BIT: usize = 3;
+pub const POWER_PEK_SHUTDOWN_LONG_PRESS_TIME_BITS: Range<usize> = 0..2;
