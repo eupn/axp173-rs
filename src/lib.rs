@@ -58,6 +58,11 @@ where
         Axp173 { i2c }
     }
 
+    /// Consumes the driver and gives I2C bus back.
+    pub fn free(self) -> I {
+        self.i2c
+    }
+
     /// Checks the I2C connection to the AXP173 chip.
     /// AXP173 doesn't have a dedicated chip ID register and connection is checked by reading
     /// on-chip buffer for a presence of default values.
