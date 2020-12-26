@@ -22,9 +22,8 @@ use regs::*;
 pub use regs::{AdcSampleRate, ChargingCurrent, ChargingVoltage, TsPinMode};
 use units::*;
 
-/// AXP173 I2C address
-/// 7-bit: 0x34
-const AXP173_ADDR: u8 = 0x68;
+/// AXP173 I2C address (7-bit)
+const AXP173_ADDR: u8 = 0x34;
 
 /// Default values for the on-chip buffer.
 /// Datasheet, p. 28, section 9.11.
