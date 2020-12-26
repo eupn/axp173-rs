@@ -292,6 +292,8 @@ pub const POWER_MODE_CHGSTATUS_BATTERY_PRESENT: usize = 5;
 pub const POWER_ON_OFF_REG_LDO2_ON: usize = 2;
 pub const POWER_ON_OFF_REG_LDO3_ON: usize = 3;
 pub const POWER_ON_OFF_REG_LDO4_ON: usize = 1;
+pub const POWER_ON_OFF_REG_DCDC2_ON: usize = 4;
+pub const POWER_ON_OFF_REG_EXTEN: usize = 6;
 pub const POWER_ON_OFF_REG_POWER_OFF: usize = 7;
 
 // POWER_CHARGE1 register bits

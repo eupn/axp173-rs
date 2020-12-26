@@ -22,9 +22,8 @@ use regs::*;
 pub use regs::{AdcSampleRate, ChargingCurrent, ChargingVoltage, TsPinMode};
 use units::*;
 
-/// AXP173 I2C address
-/// 7-bit: 0x34
-const AXP173_ADDR: u8 = 0x68;
+/// AXP173 I2C address (7-bit)
+const AXP173_ADDR: u8 = 0x34;
 
 /// Default values for the on-chip buffer.
 /// Datasheet, p. 28, section 9.11.
@@ -56,6 +55,11 @@ where
     /// Nothing will be read or written before `init()` call.
     pub fn new(i2c: I) -> Self {
         Axp173 { i2c }
+    }
+
+    /// Consumes the driver and gives I2C bus back.
+    pub fn free(self) -> I {
+        self.i2c
     }
 
     /// Checks the I2C connection to the AXP173 chip.
@@ -165,6 +169,36 @@ where
         self.write_u8(reg, bits).map_err(Error::I2c)?;
 
         Ok(())
+    }
+
+    /// Reads currently active settings of specific LDO from the chip.
+    pub fn read_ldo(&mut self, kind: LdoKind) -> Axp173Result<Ldo, E> {
+        let reg = match kind {
+            LdoKind::LDO2 | LdoKind::LDO3 => LDO2_LDO3_OUT_VOL_REG,
+            LdoKind::LDO4 => LDO4_OUT_VOL_REG,
+        };
+
+        let voltage_bits = self.read_u8(reg).map_err(Error::I2c)?;
+        let bits_range = match kind {
+            LdoKind::LDO2 => 4..8,
+            LdoKind::LDO3 => 0..4,
+            LdoKind::LDO4 => 0..7,
+        };
+        let voltage_bits = voltage_bits.get_bits(bits_range);
+
+        let enabled_bit = match kind {
+            LdoKind::LDO2 => POWER_ON_OFF_REG_LDO2_ON,
+            LdoKind::LDO3 => POWER_ON_OFF_REG_LDO3_ON,
+            LdoKind::LDO4 => POWER_ON_OFF_REG_LDO4_ON,
+        };
+        let enabled_bits = self.read_u8(POWER_ON_OFF_REG).map_err(Error::I2c)?;
+        let ldo_enabled = enabled_bits.get_bit(enabled_bit);
+
+        Ok(Ldo::from_voltage_and_enabled(
+            kind,
+            voltage_bits,
+            ldo_enabled,
+        ))
     }
 
     /// Sets charging current of the battery. Adjust this for an efficient and safe charging of
