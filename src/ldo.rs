@@ -74,15 +74,15 @@ impl Ldo {
             LdoKind::LDO2 => {
                 assert!(self.voltage <= 0b1111);
                 MilliVolts(1800 + self.voltage as usize * 100)
-            },
+            }
             LdoKind::LDO3 => {
                 assert!(self.voltage <= 0b1111);
                 MilliVolts(1800 + self.voltage as usize * 100)
-            },
+            }
             LdoKind::LDO4 => {
                 assert!(self.voltage <= 0b111_1111);
                 MilliVolts(700 + self.voltage as usize * 25)
-            },
+            }
         }
     }
 
@@ -91,7 +91,11 @@ impl Ldo {
         self.enabled
     }
 
-    pub(crate) fn from_voltage_and_enabled(kind: LdoKind, voltage_bits: u8, ldo_enabled: bool) -> Self {
+    pub(crate) fn from_voltage_and_enabled(
+        kind: LdoKind,
+        voltage_bits: u8,
+        ldo_enabled: bool,
+    ) -> Self {
         match kind {
             LdoKind::LDO2 => Ldo::ldo2_with_voltage(voltage_bits, ldo_enabled),
             LdoKind::LDO3 => Ldo::ldo3_with_voltage(voltage_bits, ldo_enabled),

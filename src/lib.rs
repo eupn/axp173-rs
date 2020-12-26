@@ -194,7 +194,11 @@ where
         let enabled_bits = self.read_u8(POWER_ON_OFF_REG).map_err(Error::I2c)?;
         let ldo_enabled = enabled_bits.get_bit(enabled_bit);
 
-        Ok(Ldo::from_voltage_and_enabled(kind, voltage_bits, ldo_enabled))
+        Ok(Ldo::from_voltage_and_enabled(
+            kind,
+            voltage_bits,
+            ldo_enabled,
+        ))
     }
 
     /// Sets charging current of the battery. Adjust this for an efficient and safe charging of
