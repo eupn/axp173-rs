@@ -10,12 +10,14 @@ use byteorder::{BigEndian, ByteOrder};
 use embedded_hal::blocking::i2c::{Write, WriteRead};
 
 mod adc;
+mod irq;
 mod ldo;
 mod pek;
 mod regs;
 mod units;
 
 pub use adc::AdcSettings;
+pub use irq::Irq;
 pub use ldo::{Ldo, LdoKind};
 pub use pek::{BootTime, LongPressTime, ShutdownLongPressTime};
 use regs::*;
