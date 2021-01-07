@@ -84,11 +84,9 @@ What is done and tested and what is not yet:
 
 - [x] Coulomb counter reading
 - [x] Coulomb counter control
-- [ ] DC/DC settings
 - [x] IRQs
 - [x] Battery voltage & current readings
 - [x] VBUS voltage & current readings
-- [ ] Temperature sensor readings
 - [x] AXP173 on-chip buffer
   - [x] Reading
   - [x] Checking default values
@@ -104,4 +102,6 @@ What is done and tested and what is not yet:
   - [x] Sample rate
   - [x] Enable/Disable various ADC channels (batt. voltage, current, etc.)
 - [x] Button settings
+- [ ] DC/DC settings
+- [ ] Temperature sensor readings
 - [ ] Instantaneous battery power reading
