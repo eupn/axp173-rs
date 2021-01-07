@@ -60,11 +60,23 @@ It's device-agnostic and uses embedded-hal's `Write`/`WriteRead` for I2C communi
    // Power-off the device after 4 seconds of
    // long press of power button
    axp173.set_shutdown_long_press_time(ShutdownLongPressTime::SEC_4)?;
+   
+   // Clear pending IRQs and enable some interesting IRQs
+   axp173.clear_all_irq()?;
+   axp173.set_irq(axp173::Irq::ButtonShortPress, true)?;
+   axp173.set_irq(axp173::Irq::BatteryCharged, true)?;
+   axp173.set_irq(axp173::Irq::VbusPluggedIn, true)?;
    ```
-
-## Details and examples
-
-TODO
+   
+4. Handle PMIC IRQs:
+   ```rust   
+   // Inside an IRQ ISR:
+   if axp173.check_irq(Irq::ButtonShortPress)? {
+       axp173.clear_irq(Irq::ButtonShortPress)?;
+       defmt::info!("Button pressed");
+   }
+   axp173.clear_all_irq()?; // Clear everything else
+   ```
 
 ## Status
 
@@ -73,7 +85,7 @@ What is done and tested and what is not yet:
 - [x] Coulomb counter reading
 - [x] Coulomb counter control
 - [ ] DC/DC settings
-- [ ] IRQs
+- [x] IRQs
 - [x] Battery voltage & current readings
 - [x] VBUS voltage & current readings
 - [ ] Temperature sensor readings
