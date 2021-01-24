@@ -78,6 +78,13 @@ where
         }
     }
 
+    /// Checks the I2C connection to the AXP173 chip but doesn't consume I2C bus.
+    pub fn check(i2c: &mut I) -> bool {
+        let mut buf = [0; 1];
+        let reg = POWER_DATA_BUFFER1;
+        i2c.write_read(AXP173_ADDR, &[reg], &mut buf).is_ok()
+    }
+
     /// Reads 6-byte user data buffer from the chip.
     pub fn read_onchip_buffer(&mut self) -> Axp173Result<[u8; 6], E> {
         let mut buf = [0u8; 6];
