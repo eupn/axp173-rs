@@ -7,6 +7,9 @@ pub(crate) const VBUS_CURRENT_DIV: u16 = 1000;
 pub(crate) const BATT_CURRENT_COEFF: u16 = 1;
 pub(crate) const BATT_CURRENT_DIV: u16 = 2;
 
+/// The weight of the least significant bit of the current measurement in milliAmps.
+pub(crate) const CURRENT_LSB: f32 = 0.5;
+
 /// Defines a 12-bit voltage reading.
 #[derive(Debug, Copy, Clone)]
 pub struct Voltage {

@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use core::convert::TryInto;
 use core::ops::Range;
 
 use bitflags::bitflags;
@@ -90,6 +91,21 @@ bitflags! {
 
         /// 200 Hz sample rate.
         const RATE_200HZ = 0b11;
+    }
+}
+
+impl TryInto<u8> for AdcSampleRate {
+    type Error = ();
+
+    fn try_into(self) -> Result<u8, ()> {
+        match self {
+            AdcSampleRate::RATE_25HZ => Ok(25),
+            AdcSampleRate::RATE_50HZ => Ok(50),
+            AdcSampleRate::RATE_100HZ => Ok(100),
+            AdcSampleRate::RATE_200HZ => Ok(200),
+
+            _ => Err(()),
+        }
     }
 }
 

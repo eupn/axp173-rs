@@ -5,6 +5,8 @@
 #![deny(missing_docs)]
 #![deny(unsafe_code)]
 
+use core::convert::TryInto;
+
 use bit_field::BitField;
 use byteorder::{BigEndian, ByteOrder};
 use embedded_hal::blocking::i2c::{Write, WriteRead};
@@ -362,6 +364,42 @@ where
         Ok(res)
     }
 
+    /// Estimates the current battery's State-of-Charge (remaining capacity)
+    /// from calculated coulomb counter values in mAhs.
+    /// Returns `None` if state-of-charge can't be calculated.
+    ///
+    /// Optionally user can provide an initial charge coulombs value to be used instead of
+    /// the value on-chip. This is useful for the very first usage when there are no charge current
+    /// flown yet and the full battery is assumed.
+    ///
+    /// Note: due to the separate charge and discharge coulomb counters,
+    /// in order to correctly calibrate the estimation,
+    /// the battery must have at least one discharge-charge cycle to have
+    /// coulomb counters set to their initial values.
+    pub fn estimate_charge_level(&mut self, charge: Option<u32>) -> Axp173Result<Option<f32>, E> {
+        let charge = charge.unwrap_or(self.read_charge_coulomb_counter()?);
+        let discharge = self.read_discharge_coulomb_counter()?;
+
+        let sample_rate = self.read_u8(POWER_ADC_SPEED_TS).map_err(Error::I2c)?;
+        let sample_rate = sample_rate.get_bits(ADC_SAMPLE_RATE_BITS);
+        Ok(
+            AdcSampleRate::from_bits(sample_rate).and_then(|sample_rate| {
+                let sample_rate: Result<u8, ()> = sample_rate.try_into();
+                sample_rate.ok().and_then(|sample_rate| {
+                    // Saturating: no sense in negative battery capacity
+                    let flow = charge.saturating_sub(discharge);
+
+                    // Estimation doesn't make sense if there no current flow registered yet
+                    if flow == 0 {
+                        return None;
+                    }
+
+                    Some(65536.0 * CURRENT_LSB as f32 * flow as f32 / 3600.0 / sample_rate as f32)
+                })
+            }),
+        )
+    }
+
     /// Sets delay before power-on.
     pub fn set_boot_time(&mut self, time: BootTime) -> OperationResult<E> {
         let mut reg = self.read_u8(POWER_PEK_SET).map_err(Error::I2c)?;
@@ -435,4 +473,9 @@ where
 
         Ok(())
     }
+}
+
+/// Converts mAh to coulombs for specified ADC sampling rate.
+pub fn mah_to_coulombs_adc(mah: f32, rate: f32) -> f32 {
+    mah / (65536.0 * CURRENT_LSB / 3600.0 / rate)
 }
