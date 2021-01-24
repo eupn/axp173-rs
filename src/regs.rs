@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use core::convert::TryInto;
 use core::ops::Range;
 
 use bitflags::bitflags;
@@ -90,6 +91,21 @@ bitflags! {
 
         /// 200 Hz sample rate.
         const RATE_200HZ = 0b11;
+    }
+}
+
+impl TryInto<u8> for AdcSampleRate {
+    type Error = ();
+
+    fn try_into(self) -> Result<u8, ()> {
+        match self {
+            AdcSampleRate::RATE_25HZ => Ok(25),
+            AdcSampleRate::RATE_50HZ => Ok(50),
+            AdcSampleRate::RATE_100HZ => Ok(100),
+            AdcSampleRate::RATE_200HZ => Ok(200),
+
+            _ => Err(()),
+        }
     }
 }
 
@@ -278,6 +294,9 @@ pub const INT3_LOWVOLTAGE_WARNING: u8 = 1 << 4;
 pub const INT4_LOWVOLTAGE_WARNING1: u8 = 1 << 1;
 pub const INT4_LOWVOLTAGE_WARNING2: u8 = 1;
 pub const INT5_TIMER: u8 = 1 << 7;
+
+// POWER_OFF_CTL register bits
+pub const POWER_OFF_CTL_SHUTDOWN: usize = 7;
 
 // POWER_STATUS register bits
 pub const POWER_STATUS_START_SOURCE_AC_VBUS: usize = 0;
