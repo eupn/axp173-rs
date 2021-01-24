@@ -431,6 +431,13 @@ where
         self.write_u8(POWER_PEK_SET, reg).map_err(Error::I2c)
     }
 
+    /// Shuts AXP173 down.
+    pub fn shutdown(&mut self) {
+        let mut bits = 0;
+        bits.set_bit(POWER_OFF_CTL_SHUTDOWN, true);
+        let _ = self.write_u8(POWER_OFF_CTL, bits);
+    }
+
     fn read_u32(&mut self, msb_reg: u8) -> Result<u32, E> {
         let mut bytes = [0u8; 4];
 

@@ -295,6 +295,9 @@ pub const INT4_LOWVOLTAGE_WARNING1: u8 = 1 << 1;
 pub const INT4_LOWVOLTAGE_WARNING2: u8 = 1;
 pub const INT5_TIMER: u8 = 1 << 7;
 
+// POWER_OFF_CTL register bits
+pub const POWER_OFF_CTL_SHUTDOWN: usize = 7;
+
 // POWER_STATUS register bits
 pub const POWER_STATUS_START_SOURCE_AC_VBUS: usize = 0;
 pub const POWER_STATUS_BATT_CHARGE_DISCHARGE: usize = 2;
