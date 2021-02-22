@@ -1,7 +1,7 @@
 //! Interrupts (IRQs).
 
 use bit_field::BitField;
-use embedded_hal::blocking::i2c::{Write, WriteRead};
+use async_embedded_traits::i2c::{AsyncI2cTransfer, AsyncI2cWrite};
 
 use crate::{Axp173, Axp173Result, Error, OperationResult};
 
@@ -92,47 +92,47 @@ impl Irq {
 }
 
 impl<I, E> Axp173<I>
-where
-    I: WriteRead<Error = E> + Write<Error = E>,
+    where
+        I: AsyncI2cTransfer<Error = E> + AsyncI2cWrite<Error = E>,
 {
     /// Enables or disables (masks) selected IRQ.
-    pub fn set_irq(&mut self, irq: Irq, enabled: bool) -> OperationResult<E> {
+    pub async fn set_irq(&mut self, irq: Irq, enabled: bool) -> OperationResult<E> {
         let (status_reg, bit) = irq.to_reg_and_bit();
         let mask_reg = status_reg - 4; // Convert status register to mask register
 
-        let mut bits = self.read_u8(mask_reg).map_err(Error::I2c)?;
+        let mut bits = self.read_u8(mask_reg).await.map_err(Error::I2c)?;
         bits.set_bit(bit, enabled);
-        self.write_u8(mask_reg, bits).map_err(Error::I2c)?;
+        self.write_u8(mask_reg, bits).await.map_err(Error::I2c)?;
 
         Ok(())
     }
 
     /// Clears previously fired selected IRQ.
-    pub fn clear_irq(&mut self, irq: Irq) -> OperationResult<E> {
+    pub async fn clear_irq(&mut self, irq: Irq) -> OperationResult<E> {
         let (status_reg, bit) = irq.to_reg_and_bit();
 
-        let mut bits = self.read_u8(status_reg).map_err(Error::I2c)?;
+        let mut bits = self.read_u8(status_reg).await.map_err(Error::I2c)?;
         bits.set_bit(bit, true); // Clear the IRQ by writing '1' bit
-        self.write_u8(status_reg, bits).map_err(Error::I2c)?;
+        self.write_u8(status_reg, bits).await.map_err(Error::I2c)?;
 
         Ok(())
     }
 
     /// Clears ALL pending IRQs.
-    pub fn clear_all_irq(&mut self) -> OperationResult<E> {
-        self.write_u8(0x44, 0xff).map_err(Error::I2c)?;
-        self.write_u8(0x45, 0xff).map_err(Error::I2c)?;
-        self.write_u8(0x46, 0xff).map_err(Error::I2c)?;
-        self.write_u8(0x47, 0xff).map_err(Error::I2c)?;
+    pub async fn clear_all_irq(&mut self) -> OperationResult<E> {
+        self.write_u8(0x44, 0xff).await.map_err(Error::I2c)?;
+        self.write_u8(0x45, 0xff).await.map_err(Error::I2c)?;
+        self.write_u8(0x46, 0xff).await.map_err(Error::I2c)?;
+        self.write_u8(0x47, 0xff).await.map_err(Error::I2c)?;
 
         Ok(())
     }
 
     /// Checks whether selected IRQ has fired or not.
     /// Note: one should clear the IRQ after checking or it will fire indefinitely
-    pub fn check_irq(&mut self, irq: Irq) -> Axp173Result<bool, E> {
+    pub async fn check_irq(&mut self, irq: Irq) -> Axp173Result<bool, E> {
         let (status_reg, bit) = irq.to_reg_and_bit();
-        let reg_val = self.read_u8(status_reg).map_err(Error::I2c)?;
+        let reg_val = self.read_u8(status_reg).await.map_err(Error::I2c)?;
         Ok(reg_val.get_bit(bit))
     }
 }

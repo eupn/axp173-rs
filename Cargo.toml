@@ -18,6 +18,7 @@ license-file = "LICENSE"
 readme = "README.md"
 
 [dependencies]
+async-embedded-traits = { path = "../async-embedded-traits" }
 byteorder = { version = "1", default-features = false }
 bitflags = "1"
 bit_field = "0.10"
