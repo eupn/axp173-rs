@@ -7,9 +7,9 @@
 
 use core::convert::TryInto;
 
+use async_embedded_traits::i2c::{AsyncI2cTransfer, AsyncI2cWrite, I2cAddress7Bit};
 use bit_field::BitField;
 use byteorder::{BigEndian, ByteOrder};
-use async_embedded_traits::i2c::{AsyncI2cTransfer, AsyncI2cWrite};
 //use embedded_hal::blocking::i2c::{Write, WriteRead};
 
 mod adc;
@@ -28,7 +28,7 @@ pub use regs::{AdcSampleRate, ChargingCurrent, ChargingVoltage, TsPinMode};
 use units::*;
 
 /// AXP173 I2C address (7-bit)
-const AXP173_ADDR: u16 = 0x34;
+const AXP173_ADDR: u8 = 0x34;
 
 /// Default values for the on-chip buffer.
 /// Datasheet, p. 28, section 9.11.
@@ -54,7 +54,7 @@ pub struct Axp173<I> {
 
 impl<I, E> Axp173<I>
 where
-    I: AsyncI2cTransfer<Error = E> + AsyncI2cWrite<Error = E>,
+    I: AsyncI2cTransfer<I2cAddress7Bit, Error = E> + AsyncI2cWrite<I2cAddress7Bit, Error = E>,
 {
     /// Side-effect-free constructor.
     /// Nothing will be read or written before `init()` call.
@@ -85,7 +85,9 @@ where
     pub async fn check(i2c: &mut I) -> bool {
         let mut buf = [0; 1];
         let reg = POWER_DATA_BUFFER1;
-        i2c.async_transfer(AXP173_ADDR, &[reg], &mut buf).await.is_ok()
+        i2c.async_transfer(AXP173_ADDR.try_into().unwrap(), &[reg], &mut buf)
+            .await
+            .is_ok()
     }
 
     /// Reads 6-byte user data buffer from the chip.
@@ -108,7 +110,10 @@ where
             buf[i + 1] = *byte;
         }
 
-        self.i2c.async_write(AXP173_ADDR, &buf[..]).await.map_err(Error::I2c)?;
+        self.i2c
+            .async_write(AXP173_ADDR.try_into().unwrap(), &buf[..])
+            .await
+            .map_err(Error::I2c)?;
 
         Ok(())
     }
@@ -122,14 +127,20 @@ where
 
     /// Returns `true` if lithium battery is connected.
     pub async fn battery_present(&mut self) -> Axp173Result<bool, E> {
-        let reg_val = self.read_u8(POWER_MODE_CHGSTATUS).await.map_err(Error::I2c)?;
+        let reg_val = self
+            .read_u8(POWER_MODE_CHGSTATUS)
+            .await
+            .map_err(Error::I2c)?;
 
         Ok(reg_val.get_bit(POWER_MODE_CHGSTATUS_BATTERY_PRESENT))
     }
 
     /// Returns `true` if lithium battery is connected and currently charging.
     pub async fn battery_charging(&mut self) -> Axp173Result<bool, E> {
-        let reg_val = self.read_u8(POWER_MODE_CHGSTATUS).await.map_err(Error::I2c)?;
+        let reg_val = self
+            .read_u8(POWER_MODE_CHGSTATUS)
+            .await
+            .map_err(Error::I2c)?;
 
         Ok(reg_val.get_bit(POWER_MODE_CHGSTATUS_IS_CHARGING))
     }
@@ -156,7 +167,9 @@ where
 
         bits.set_bit(bit, enable);
 
-        self.write_u8(POWER_ON_OFF_REG, bits).await.map_err(Error::I2c)?;
+        self.write_u8(POWER_ON_OFF_REG, bits)
+            .await
+            .map_err(Error::I2c)?;
 
         Ok(())
     }
@@ -220,7 +233,9 @@ where
         let mut bits = self.read_u8(POWER_CHARGE1).await.map_err(Error::I2c)?;
         bits.set_bits(POWER_CHARGE1_CURRENT_SETTING, current.bits());
 
-        self.write_u8(POWER_CHARGE1, bits).await.map_err(Error::I2c)?;
+        self.write_u8(POWER_CHARGE1, bits)
+            .await
+            .map_err(Error::I2c)?;
 
         Ok(())
     }
@@ -232,7 +247,9 @@ where
         let mut bits = self.read_u8(POWER_CHARGE1).await.map_err(Error::I2c)?;
         bits.set_bits(POWER_CHARGE1_VOLTAGE_SETTING, voltage.bits());
 
-        self.write_u8(POWER_CHARGE1, bits).await.map_err(Error::I2c)?;
+        self.write_u8(POWER_CHARGE1, bits)
+            .await
+            .map_err(Error::I2c)?;
 
         Ok(())
     }
@@ -242,7 +259,9 @@ where
         let mut bits = self.read_u8(POWER_CHARGE1).await.map_err(Error::I2c)?;
         bits.set_bit(POWER_CHARGE1_ENABLE_CHARGING, enabled);
 
-        self.write_u8(POWER_CHARGE1, bits).await.map_err(Error::I2c)?;
+        self.write_u8(POWER_CHARGE1, bits)
+            .await
+            .map_err(Error::I2c)?;
 
         Ok(())
     }
@@ -252,7 +271,9 @@ where
         // Set the contents of ADC enable/disable register.
         let mut bits = self.read_u8(POWER_ADC_EN1).await.map_err(Error::I2c)?;
         adc_settings.write_adc_en_bits(&mut bits);
-        self.write_u8(POWER_ADC_EN1, bits).await.map_err(Error::I2c)?;
+        self.write_u8(POWER_ADC_EN1, bits)
+            .await
+            .map_err(Error::I2c)?;
 
         // Set ADC sample rate
         let mut bits = self.read_u8(POWER_ADC_SPEED_TS).await.map_err(Error::I2c)?;
@@ -280,14 +301,20 @@ where
 
     /// Returns battery voltage.
     pub async fn batt_voltage(&mut self) -> Axp173Result<Voltage, E> {
-        let res = self.read_u12(POWER_BAT_AVERVOL_H8).await.map_err(Error::I2c)?;
+        let res = self
+            .read_u12(POWER_BAT_AVERVOL_H8)
+            .await
+            .map_err(Error::I2c)?;
 
         Ok(Voltage::new(res, BATT_VOLTAGE_COEFF))
     }
 
     /// Returns battery charging current.
     pub async fn batt_charge_current(&mut self) -> Axp173Result<Current, E> {
-        let res = self.read_u13(POWER_BAT_AVERCHGCUR_H8).await.map_err(Error::I2c)?;
+        let res = self
+            .read_u13(POWER_BAT_AVERCHGCUR_H8)
+            .await
+            .map_err(Error::I2c)?;
 
         Ok(Current::new(res, BATT_CURRENT_COEFF, BATT_CURRENT_DIV))
     }
@@ -314,7 +341,9 @@ where
 
         reg.set_bit(COULOMB_ENABLE, enabled);
 
-        self.write_u8(POWER_COULOMB_CTL, reg).await.map_err(Error::I2c)?;
+        self.write_u8(POWER_COULOMB_CTL, reg)
+            .await
+            .map_err(Error::I2c)?;
 
         Ok(())
     }
@@ -325,7 +354,9 @@ where
 
         reg.set_bit(COULOMB_RESET, true); // this bit is self-clearing
 
-        self.write_u8(POWER_COULOMB_CTL, reg).await.map_err(Error::I2c)?;
+        self.write_u8(POWER_COULOMB_CTL, reg)
+            .await
+            .map_err(Error::I2c)?;
 
         Ok(())
     }
@@ -336,7 +367,9 @@ where
 
         reg.set_bit(COULOMB_PAUSE, true);
 
-        self.write_u8(POWER_COULOMB_CTL, reg).await.map_err(Error::I2c)?;
+        self.write_u8(POWER_COULOMB_CTL, reg)
+            .await
+            .map_err(Error::I2c)?;
 
         Ok(())
     }
@@ -347,14 +380,19 @@ where
 
         reg.set_bit(COULOMB_PAUSE, false);
 
-        self.write_u8(POWER_COULOMB_CTL, reg).await.map_err(Error::I2c)?;
+        self.write_u8(POWER_COULOMB_CTL, reg)
+            .await
+            .map_err(Error::I2c)?;
 
         Ok(())
     }
 
     /// Returns current charging coulomb counter value (amount of current to battery).
     pub async fn read_charge_coulomb_counter(&mut self) -> Axp173Result<u32, E> {
-        let res = self.read_u32(POWER_BAT_CHGCOULOMB3).await.map_err(Error::I2c)?;
+        let res = self
+            .read_u32(POWER_BAT_CHGCOULOMB3)
+            .await
+            .map_err(Error::I2c)?;
 
         Ok(res)
     }
@@ -381,7 +419,10 @@ where
     /// in order to correctly calibrate the estimation,
     /// the battery must have at least one discharge-charge cycle to have
     /// coulomb counters set to their initial values.
-    pub async fn estimate_charge_level(&mut self, charge: Option<u32>) -> Axp173Result<Option<f32>, E> {
+    pub async fn estimate_charge_level(
+        &mut self,
+        charge: Option<u32>,
+    ) -> Axp173Result<Option<f32>, E> {
         let charge = charge.unwrap_or(self.read_charge_coulomb_counter().await?);
         let discharge = self.read_discharge_coulomb_counter().await?;
 
@@ -470,18 +511,26 @@ where
     async fn read_u8(&mut self, reg: u8) -> Result<u8, E> {
         let mut byte: [u8; 1] = [0; 1];
 
-        match self.i2c.async_transfer(AXP173_ADDR, &[reg], &mut byte).await {
+        match self
+            .i2c
+            .async_transfer(AXP173_ADDR.try_into().unwrap(), &[reg], &mut byte)
+            .await
+        {
             Ok(_) => Ok(byte[0]),
             Err(e) => Err(e),
         }
     }
 
     async fn read_bytes(&mut self, reg: u8, buf: &mut [u8]) -> Result<(), E> {
-        self.i2c.async_transfer(AXP173_ADDR, &[reg], buf).await
+        self.i2c
+            .async_transfer(AXP173_ADDR.try_into().unwrap(), &[reg], buf)
+            .await
     }
 
     async fn write_u8(&mut self, reg: u8, value: u8) -> Result<(), E> {
-        self.i2c.async_write(AXP173_ADDR, &[reg, value]).await?;
+        self.i2c
+            .async_write(AXP173_ADDR.try_into().unwrap(), &[reg, value])
+            .await?;
 
         Ok(())
     }

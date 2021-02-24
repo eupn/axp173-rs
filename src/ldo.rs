@@ -3,6 +3,7 @@
 pub struct MilliVolts(pub usize);
 
 /// Voltage regulators in AXP173 that can be enabled or disabled.
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Debug)]
 pub enum LdoKind {
     /// LDO2.

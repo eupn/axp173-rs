@@ -1,7 +1,7 @@
 //! Interrupts (IRQs).
 
+use async_embedded_traits::i2c::{AsyncI2cTransfer, AsyncI2cWrite, I2cAddress7Bit};
 use bit_field::BitField;
-use async_embedded_traits::i2c::{AsyncI2cTransfer, AsyncI2cWrite};
 
 use crate::{Axp173, Axp173Result, Error, OperationResult};
 
@@ -92,8 +92,8 @@ impl Irq {
 }
 
 impl<I, E> Axp173<I>
-    where
-        I: AsyncI2cTransfer<Error = E> + AsyncI2cWrite<Error = E>,
+where
+    I: AsyncI2cTransfer<I2cAddress7Bit, Error = E> + AsyncI2cWrite<I2cAddress7Bit, Error = E>,
 {
     /// Enables or disables (masks) selected IRQ.
     pub async fn set_irq(&mut self, irq: Irq, enabled: bool) -> OperationResult<E> {
