@@ -18,7 +18,7 @@ license-file = "LICENSE"
 readme = "README.md"
 
 [dependencies]
-async-embedded-traits = { git = "https://github.com/eupn/async-embedded-traits.git", branch = "i2c" }
+async-embedded-traits = "0.1.2"
 byteorder = { version = "1", default-features = false }
 bitflags = "1"
 bit_field = "0.10"
