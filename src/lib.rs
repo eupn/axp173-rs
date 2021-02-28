@@ -90,6 +90,13 @@ where
             .is_ok()
     }
 
+    /// Checks the I2C connection to the AXP173 chip but doesn't consume I2C bus.
+    pub fn check_sync<IR: embedded_hal::blocking::i2c::Read>(i2c: &mut IR) -> bool {
+        let mut buf = [0; 1];
+        i2c.read(AXP173_ADDR, &mut buf)
+            .is_ok()
+    }
+
     /// Reads 6-byte user data buffer from the chip.
     pub async fn read_onchip_buffer(&mut self) -> Axp173Result<[u8; 6], E> {
         let mut buf = [0u8; 6];
